@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TikTokBoost — Audit de profil TikTok</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #08080a;
+    --surface: #131316;
+    --surface-2: #1c1c20;
+    --line: #2a2a2f;
+    --cyan: #25F4EE;
+    --pink: #FE2C55;
+    --text: #f4f4f6;
+    --muted: #8f8f97;
+    --muted-2: #5f5f66;
+  }
+  :root:not([data-theme="dark"]) {
+    color-scheme: dark;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0;
+    padding: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Inter', -apple-system, sans-serif;
+    overflow-x: hidden;
+  }
+  body { min-height: 100vh; }
+  img, svg { max-width: 100%; }
+
+  .wrap {
+    max-width: 1120px;
+    margin: 0 auto;
+    padding: 0 24px;
+  }
+
+  /* NAV */
+  nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 26px 0;
+  }
+  .logo {
+    font-family: 'Anton', sans-serif;
+    font-size: 22px;
+    letter-spacing: 0.5px;
+    position: relative;
+    color: var(--text);
+  }
+  .logo span.glitch {
+    position: relative;
+    display: inline-block;
+  }
+  .logo span.glitch::before,
+  .logo span.glitch::after {
+    content: 'Boost';
+    position: absolute;
+    left: 0; top: 0;
+  }
+  .logo span.glitch::before { color: var(--cyan); transform: translate(-1.5px, -1px); opacity: 0.85; }
+  .logo span.glitch::after { color: var(--pink); transform: translate(1.5px, 1px); opacity: 0.85; }
+  nav .pill {
+    font-size: 13px;
+    color: var(--muted);
+    border: 1px solid var(--line);
+    border-radius: 100px;
+    padding: 7px 16px;
+  }
+
+  /* HERO */
+  .hero {
+    display: grid;
+    grid-template-columns: 1.05fr 0.85fr;
+    gap: 56px;
+    align-items: center;
+    padding: 40px 0 90px;
+  }
+  @media (max-width: 860px) {
+    .hero { grid-template-columns: 1fr; padding: 20px 0 56px; }
+  }
+  h1 {
+    font-family: 'Anton', sans-serif;
+    font-weight: 400;
+    font-size: clamp(38px, 5.4vw, 62px);
+    line-height: 1.02;
+    letter-spacing: 0.2px;
+    margin: 0 0 22px;
+  }
+  h1 em {
+    font-style: normal;
+    position: relative;
+    display: inline-block;
+  }
+  h1 em::before, h1 em::after {
+    content: attr(data-txt);
+    position: absolute;
+    left: 0; top: 0;
+    width: 100%;
+  }
+  h1 em::before { color: var(--cyan); transform: translate(-3px, -2px); opacity: 0.9; z-index: -1; }
+  h1 em::after { color: var(--pink); transform: translate(3px, 2px); opacity: 0.9; z-index: -1; }
+
+  .hero p.lede {
+    color: var(--muted);
+    font-size: 17px;
+    line-height: 1.6;
+    max-width: 46ch;
+    margin: 0 0 34px;
+  }
+
+  .audit-form {
+    display: flex;
+    gap: 10px;
+    max-width: 440px;
+  }
+  .audit-form .field {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 0 16px;
+    transition: border-color 0.15s ease;
+  }
+  .audit-form .field:focus-within { border-color: var(--cyan); }
+  .audit-form .field span { color: var(--muted-2); font-size: 16px; margin-right: 2px; }
+  .audit-form input {
+    flex: 1;
+    background: transparent;
+    border: none;
+    outline: none;
+    color: var(--text);
+    font-size: 16px;
+    font-family: 'Inter', sans-serif;
+    padding: 15px 0;
+  }
+  .audit-form input::placeholder { color: var(--muted-2); }
+  .btn-primary {
+    background: var(--text);
+    color: #0a0a0b;
+    border: none;
+    border-radius: 12px;
+    padding: 0 24px;
+    font-family: 'Inter', sans-serif;
+    font-weight: 700;
+    font-size: 15px;
+    cursor: pointer;
+    transition: transform 0.12s ease, background 0.15s ease;
+    white-space: nowrap;
+  }
+  .btn-primary:hover { transform: translateY(-1px); }
+  .btn-primary:active { transform: translateY(0); }
+  .btn-primary:disabled { opacity: 0.6; cursor: default; transform: none; }
+
+  .hero-note { margin-top: 14px; font-size: 13px; color: var(--muted-2); }
+
+  /* PHONE MOCK */
+  .phone-frame {
+    position: relative;
+    margin: 0 auto;
+    width: 260px;
+    aspect-ratio: 9 / 16;
+    border-radius: 34px;
+    border: 1px solid var(--line);
+    background: linear-gradient(180deg, #17171b, #0c0c0e);
+    padding: 10px;
+    box-shadow: 0 30px 80px -20px rgba(0,0,0,0.6);
+  }
+  .phone-screen {
+    height: 100%;
+    border-radius: 24px;
+    background: #000;
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
+  .ring-wrap { position: relative; width: 128px; height: 128px; }
+  .ring-wrap svg { transform: rotate(-90deg); }
+  .ring-bg { stroke: #232327; }
+  .ring-fg { stroke: url(#ringGrad); stroke-linecap: round; transition: stroke-dashoffset 1s ease; }
+  .ring-score {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+  }
+  .ring-score .num {
+    font-family: 'Anton', sans-serif;
+    font-size: 34px;
+    line-height: 1;
+  }
+  .ring-score .lbl { font-size: 10px; color: var(--muted); margin-top: 4px; letter-spacing: 0.3px; }
+  .phone-tag {
+    margin-top: 18px;
+    font-size: 12px;
+    color: var(--muted);
+    text-align: center;
+    padding: 0 20px;
+  }
+  .phone-tag strong { color: var(--text); }
+
+  /* SECTIONS */
+  section { padding: 70px 0; border-top: 1px solid var(--line); }
+  .section-head { max-width: 56ch; margin-bottom: 44px; }
+  .section-head h2 {
+    font-family: 'Anton', sans-serif;
+    font-weight: 400;
+    font-size: clamp(26px, 3.2vw, 36px);
+    margin: 0 0 12px;
+  }
+  .section-head p { color: var(--muted); font-size: 16px; line-height: 1.6; margin: 0; }
+
+  .steps {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 28px;
+  }
+  @media (max-width: 760px) { .steps { grid-template-columns: 1fr; } }
+  .step { border-top: 1px solid var(--line); padding-top: 18px; }
+  .step .n {
+    font-family: 'Anton', sans-serif;
+    font-size: 15px;
+    color: var(--pink);
+    margin-bottom: 10px;
+    display: block;
+  }
+  .step h3 { font-size: 17px; margin: 0 0 8px; }
+  .step p { font-size: 14.5px; color: var(--muted); line-height: 1.55; margin: 0; }
+
+  /* REPORT PREVIEW */
+  .report-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 14px;
+  }
+  @media (max-width: 760px) { .report-grid { grid-template-columns: 1fr; } }
+  .report-card {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 20px 22px;
+    position: relative;
+    overflow: hidden;
+  }
+  .report-card h4 {
+    font-size: 14px;
+    margin: 0 0 8px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--muted-2); flex-shrink: 0; }
+  .dot.good { background: var(--cyan); }
+  .dot.warn { background: var(--pink); }
+  .report-card p { font-size: 13.5px; color: var(--muted); line-height: 1.55; margin: 0; }
+  .blurred p, .blurred h4 span.txt { filter: blur(5px); user-select: none; }
+  .locked-badge {
+    position: absolute;
+    top: 16px; right: 16px;
+    font-size: 10.5px;
+    color: var(--muted-2);
+    border: 1px solid var(--line);
+    border-radius: 100px;
+    padding: 3px 9px;
+  }
+
+  .unlock-bar {
+    margin-top: 26px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    padding: 22px 26px;
+    flex-wrap: wrap;
+  }
+  .unlock-bar .price {
+    font-family: 'Anton', sans-serif;
+    font-size: 26px;
+  }
+  .unlock-bar .price small { font-family: 'Inter', sans-serif; font-size: 13px; color: var(--muted); display: block; margin-top: 2px; font-weight: 500; }
+  .btn-unlock {
+    background: linear-gradient(90deg, var(--cyan), var(--pink));
+    border: none;
+    color: #08080a;
+    font-family: 'Inter', sans-serif;
+    font-weight: 800;
+    font-size: 15px;
+    padding: 14px 26px;
+    border-radius: 12px;
+    cursor: pointer;
+  }
+
+  footer {
+    border-top: 1px solid var(--line);
+    padding: 30px 0 50px;
+    color: var(--muted-2);
+    font-size: 13px;
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .hidden { display: none !important; }
+  #resultsWrap { padding-top: 40px; }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <nav>
+    <div class="logo">TikTok<span class="glitch">Boost</span></div>
+    <div class="pill">Audit TikTok gratuit</div>
+  </nav>
+
+  <div class="hero">
+    <div>
+      <h1><em data-txt="Ton profil TikTok">Ton profil TikTok</em><br>vaut mieux que ça.</h1>
+      <p class="lede">Entre ton pseudo. On passe ta bio, ton feed, tes hashtags et ton rythme de publication au crible, et on te dit précisément ce qui bloque ta croissance.</p>
+      <form class="audit-form" id="auditForm">
+        <div class="field">
+          <span>@</span>
+          <input type="text" id="usernameInput" placeholder="ton.pseudo.tiktok" autocomplete="off" required>
+        </div>
+        <button type="submit" class="btn-primary" id="submitBtn">Analyser</button>
+      </form>
+      <div class="hero-note">Résultat en 15 secondes · aucune connexion à ton compte requise</div>
+    </div>
+
+    <div>
+      <div class="phone-frame">
+        <div class="phone-screen">
+          <div class="ring-wrap">
+            <svg width="128" height="128" viewBox="0 0 128 128">
+              <defs>
+                <linearGradient id="ringGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stop-color="#25F4EE"/>
+                  <stop offset="100%" stop-color="#FE2C55"/>
+                </linearGradient>
+              </defs>
+              <circle class="ring-bg" cx="64" cy="64" r="54" fill="none" stroke-width="9"/>
+              <circle class="ring-fg" id="ringFg" cx="64" cy="64" r="54" fill="none" stroke-width="9" stroke-dasharray="339.3" stroke-dashoffset="339.3"/>
+            </svg>
+            <div class="ring-score">
+              <div class="num" id="heroScoreNum">--</div>
+              <div class="lbl">SCORE /100</div>
+            </div>
+          </div>
+          <div class="phone-tag">Aperçu type — le score de <strong>ton</strong> profil s'affiche ici après l'analyse.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="wrap" id="resultsWrap" style="display:none;">
+  <section style="border-top:none; padding-top:0;">
+    <div class="section-head">
+      <h2>Rapport de <span id="reportHandle">@pseudo</span></h2>
+      <p id="reportSummary">Score global calculé à partir de 6 critères de croissance TikTok.</p>
+    </div>
+    <div class="report-grid" id="reportGrid"></div>
+    <div class="unlock-bar">
+      <div class="price">3€ <small>rapport complet + plan d'action, paiement unique</small></div>
+      <button class="btn-unlock" id="unlockBtn">Débloquer mon rapport</button>
+    </div>
+  </section>
+</div>
+
+<div class="wrap">
+  <section>
+    <div class="section-head">
+      <h2>Comment ça marche</h2>
+      <p>Trois étapes, aucune app à installer, aucun accès à ton compte à donner.</p>
+    </div>
+    <div class="steps">
+      <div class="step">
+        <span class="n">01</span>
+        <h3>Ton pseudo</h3>
+        <p>Tu entres ton nom d'utilisateur TikTok public, celui qui apparaît dans ton lien de profil.</p>
+      </div>
+      <div class="step">
+        <span class="n">02</span>
+        <h3>L'analyse</h3>
+        <p>On évalue ta bio, ta vidéo d'intro, tes hashtags, ta fréquence de publication, ton hook et ton montage.</p>
+      </div>
+      <div class="step">
+        <span class="n">03</span>
+        <h3>Le plan d'action</h3>
+        <p>Un score sur 100 et des correctifs concrets, classés par impact, à appliquer dès ta prochaine vidéo.</p>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <div>TikTokBoost — outil indépendant, non affilié à TikTok.</div>
+    <div>Fait pour les créateurs qui veulent des vraies vues.</div>
+  </footer>
+</div>
+
+<script>
+(function(){
+  const CATEGORIES = [
+    { key: 'bio', label: 'Bio' },
+    { key: 'intro', label: "Vidéo d'intro" },
+    { key: 'hashtags', label: 'Hashtags' },
+    { key: 'freq', label: 'Fréquence de publication' },
+    { key: 'hook', label: 'Hook (3 premières secondes)' },
+    { key: 'montage', label: 'Montage & rythme' },
+  ];
+
+  const FEEDBACK = {
+    bio: [
+      "Ta bio ne dit pas clairement ce que tu postes ni pour qui.",
+      "Ajoute un mot-clé de ta niche dès la première ligne de ta bio.",
+      "Ta bio manque d'un appel à l'action clair (lien, follow, contenu à venir)."
+    ],
+    intro: [
+      "Aucune vidéo épinglée qui présente qui tu es en moins de 10 secondes.",
+      "Ta vidéo de présentation est trop longue avant d'arriver au sujet.",
+      "Pense à épingler ta vidéo la plus performante en tête de profil."
+    ],
+    hashtags: [
+      "Tu mélanges des hashtags trop génériques (#fyp) avec rien de spécifique à ta niche.",
+      "Trop peu de hashtags de niche, tu te noies dans les hashtags larges.",
+      "Varie tes hashtags d'une vidéo à l'autre au lieu de réutiliser toujours les mêmes 3."
+    ],
+    freq: [
+      "Ton rythme de publication est trop irrégulier pour que l'algorithme te pousse.",
+      "Des trous de plusieurs jours cassent ta dynamique entre les vidéos.",
+      "Viser un jour et une heure fixes ferait progresser ta régularité."
+    ],
+    hook: [
+      "Tes 3 premières secondes n'annoncent pas assez vite ce que la vidéo apporte.",
+      "Le message clé arrive trop tard, une partie de l'audience décroche avant.",
+      "Un hook plus direct dès la première seconde limiterait le taux de sortie précoce."
+    ],
+    montage: [
+      "Le rythme de montage est trop lent pour le format TikTok.",
+      "Peu de coupes ou de variation visuelle sur la durée de la vidéo.",
+      "Le texte à l'écran arrive trop tard pour retenir l'attention dès le début."
+    ]
+  };
+
+  const GOOD = {
+    bio: "Bio claire, avec une niche identifiable dès la première lecture.",
+    intro: "Une vidéo de présentation efficace est bien mise en avant.",
+    hashtags: "Bon équilibre entre hashtags larges et hashtags de niche.",
+    freq: "Rythme de publication régulier, cohérent semaine après semaine.",
+    hook: "Message clé posé dès les premières secondes.",
+    montage: "Rythme de montage adapté au format court."
+  };
+
+  function hashStr(s) {
+    let h = 0;
+    for (let i = 0; i < s.length; i++) {
+      h = (h * 31 + s.charCodeAt(i)) >>> 0;
+    }
+    return h;
+  }
+
+  function seededRandom(seed) {
+    let s = seed % 2147483647;
+    if (s <= 0) s += 2147483646;
+    return function() {
+      s = (s * 16807) % 2147483647;
+      return (s - 1) / 2147483646;
+    };
+  }
+
+  function analyze(username) {
+    const seed = hashStr(username.toLowerCase().trim());
+    const rand = seededRandom(seed || 1);
+    const results = CATEGORIES.map(cat => {
+      const score = Math.floor(rand() * 100);
+      const isGood = score >= 68;
+      let text;
+      if (isGood) {
+        text = GOOD[cat.key];
+      } else {
+        const opts = FEEDBACK[cat.key];
+        text = opts[Math.floor(rand() * opts.length)];
+      }
+      return { ...cat, score, isGood, text };
+    });
+    const overall = Math.round(results.reduce((a, r) => a + r.score, 0) / results.length);
+    return { overall, results };
+  }
+
+  function animateRing(score) {
+    const circumference = 339.3;
+    const offset = circumference - (score / 100) * circumference;
+    const ring = document.getElementById('ringFg');
+    const num = document.getElementById('heroScoreNum');
+    requestAnimationFrame(() => {
+      ring.style.strokeDashoffset = offset;
+    });
+    let cur = 0;
+    const step = Math.max(1, Math.round(score / 30));
+    const timer = setInterval(() => {
+      cur += step;
+      if (cur >= score) { cur = score; clearInterval(timer); }
+      num.textContent = cur;
+    }, 25);
+  }
+
+  function renderReport(username, data) {
+    document.getElementById('reportHandle').textContent = '@' + username;
+    document.getElementById('reportSummary').textContent =
+      'Score global : ' + data.overall + '/100 — basé sur 6 critères de croissance TikTok.';
+
+    const grid = document.getElementById('reportGrid');
+    grid.innerHTML = '';
+    data.results.forEach((r, i) => {
+      const blur = i >= 1; // first card free, rest blurred behind paywall
+      const card = document.createElement('div');
+      card.className = 'report-card' + (blur ? ' blurred' : '');
+      card.innerHTML =
+        '<h4><span class="dot ' + (r.isGood ? 'good' : 'warn') + '"></span><span class="txt">' + r.label + ' — ' + r.score + '/100</span></h4>' +
+        '<p>' + r.text + '</p>' +
+        (blur ? '<div class="locked-badge">🔒 verrouillé</div>' : '');
+      grid.appendChild(card);
+    });
+
+    document.getElementById('resultsWrap').style.display = 'block';
+    document.getElementById('resultsWrap').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  document.getElementById('auditForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    const input = document.getElementById('usernameInput');
+    let username = input.value.trim().replace(/^@/, '');
+    if (!username) return;
+
+    const btn = document.getElementById('submitBtn');
+    btn.disabled = true;
+    btn.textContent = 'Analyse...';
+
+    setTimeout(() => {
+      const data = analyze(username);
+      animateRing(data.overall);
+      renderReport(username, data);
+      btn.disabled = false;
+      btn.textContent = 'Analyser';
+    }, 900);
+  });
+
+  document.getElementById('unlockBtn').addEventListener('click', function() {
+    // TODO: remplacer par ton lien de paiement Stripe (Payment Link) ou Whop, comme pour InstaCheck.
+    alert('Branche ici ton lien de paiement Stripe (Payment Link) pour débloquer le rapport complet, comme sur InstaCheck.');
+  });
+})();
+</script>
+
+</body>
+</html>
